@@ -6,7 +6,7 @@ one convenient API surface.
 | Original area | D status | Notes |
 | --- | --- | --- |
 | shared | translated | ShizukuApiConstants translated exactly. |
-| aidl | protocol + primitive client | All four interface transaction maps are represented. An API-29+ NDK client now implements the primitive IShizukuService calls with AIDL status headers; Bundle/Intent/callback/array/object codecs and local stubs remain. |
+| aidl | protocol + native clients | All four transaction maps are represented. API-29+ NDK code now covers primitive IShizukuService calls, all IRemoteProcess calls, and the local IShizukuServiceConnection callback Binder. Bundle/Intent/string-array and IShizukuApplication codecs remain. |
 | api | substantial | Core state, UserService arguments/launch parsing, client records, service-connection/cache state, system-property parsing, remote-process state, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/stream adapters remain. |
 | provider | protocol/state translated | Constants, BinderContainer holder semantics, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
 | server-shared | substantial policy translation | ConfigManager/entry, ClientRecord/ClientManager, UserService record state, UserServiceManager record/peek/start policy, Service permission/request/flag policy and UID helpers are translated. Binder/PackageManager/process/file-descriptor plumbing and Android runtime bootstrapping remain. |
@@ -46,10 +46,10 @@ remain separate work.
 
 ## Next translation slices independent of that seam
 
-- local IShizukuApplication and IShizukuServiceConnection Binder classes;
+- local IShizukuApplication Binder class;
 - attachApplication V13 Bundle codec and V11 compatibility transaction;
 - add/remove/attach user-service Bundle codecs;
-- newProcess string-array and remote-process Binder codec;
+- newProcess string-array and returned Binder codec;
 - provider ContentProvider/Bundle/Intent/Handler adapters;
 - rish POSIX/Bionic fork/pty/transfer implementation;
 - server-side Binder stub and Android PackageManager/property/process adapters;

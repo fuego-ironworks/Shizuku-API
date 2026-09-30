@@ -3,7 +3,10 @@
 `service_ndk_client.d` is the first direct libbinder_ndk implementation rather
 than a protocol-only model.
 
-Implemented against the Ick Android touchpoint commit pinned in SOURCE.lock:
+Implemented against the Ick Android touchpoint commit pinned in SOURCE.lock.
+The shared AIDL transaction/status code lives in `aidl_ndk.d`.
+
+Primitive IShizukuService calls:
 
 - getVersion
 - getUid
@@ -36,10 +39,16 @@ The lower-API compatibility path still needs the Java Binder/JNI bridge.
 
 ## Still missing from the NDK client
 
-The methods carrying Bundle, Intent, binder callback interfaces, string arrays,
-or remote-process objects need additional codecs and local Binder classes:
-attachApplication, newProcess, add/remove/attach user service, package-change
-dispatch, permission-confirmation dispatch, and related callbacks.
+`IRemoteProcess` now has a complete native proxy for its three file-descriptor
+streams, wait/exit/destroy/alive, and waitForTimeout calls. A local
+`IShizukuServiceConnection` Binder class decodes connected/died callbacks; the
+connected Binder is borrowed for the callback duration and must be retained
+explicitly with `AIBinder_incStrong` if stored.
+
+Still missing are the methods carrying Bundle, Intent, string arrays, or the
+IShizukuApplication callback interface: attachApplication, newProcess,
+add/remove/attach user service, package-change dispatch, permission-confirmation
+dispatch, and related callbacks.
 
 The Ick compiler also still rejects the external calls needed to execute this
 module on ARM. This source records the intended native implementation; it is not

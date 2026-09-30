@@ -397,3 +397,10 @@ unittest {
     container.binder = cast(void*) 1;
     assert(container.describe_contents() == 0);
 }
+
+
+unittest {
+    assert(time_unit_name(RemoteTimeUnit.nanoseconds) == "NANOSECONDS");
+    assert(time_unit_name(RemoteTimeUnit.seconds) == "SECONDS");
+    assert(time_unit_name(RemoteTimeUnit.days) == "DAYS");
+}

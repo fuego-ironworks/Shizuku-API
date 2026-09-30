@@ -127,3 +127,23 @@ pure nothrow @nogc bool owner_death_should_destroy_process(bool process_alive)
 {
     return process_alive;
 }
+
+pure nothrow @nogc string time_unit_name(RemoteTimeUnit unit)
+{
+    final switch (unit) {
+    case RemoteTimeUnit.nanoseconds:
+        return "NANOSECONDS";
+    case RemoteTimeUnit.microseconds:
+        return "MICROSECONDS";
+    case RemoteTimeUnit.milliseconds:
+        return "MILLISECONDS";
+    case RemoteTimeUnit.seconds:
+        return "SECONDS";
+    case RemoteTimeUnit.minutes:
+        return "MINUTES";
+    case RemoteTimeUnit.hours:
+        return "HOURS";
+    case RemoteTimeUnit.days:
+        return "DAYS";
+    }
+}

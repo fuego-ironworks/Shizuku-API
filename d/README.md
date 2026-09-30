@@ -34,8 +34,10 @@ copying Binder/Parcel ABI declarations.
 - system-property Java decode/boolean semantics;
 - service-connection cache/death state, BinderContainer semantics, and user-service launch parsing;
 - remote-process lifetime/time-unit policy and Rish host/service/terminal native planning;
-- direct API-29+ libbinder_ndk clients for primitive Shizuku service calls,
-  including AIDL status-header handling;
+- shared AIDL/libbinder_ndk transaction/status machinery;
+- direct API-29+ libbinder_ndk clients for primitive Shizuku service calls and
+  all IRemoteProcess methods;
+- a local IShizukuServiceConnection Binder callback object;
 - initial Binder lifetime/liveness calls through the Ick Android ABI seam;
 - semantic unittests for the pure state/protocol layer.
 

@@ -1,0 +1,159 @@
+module shizuku.aidl_ndk;
+
+import ick.android;
+
+/**
+ * Result of one standard AIDL NDK transaction.
+ */
+struct AidlCallStatus {
+    binder_status_t transport_status = STATUS_OK;
+    binder_status_t header_status = STATUS_OK;
+    binder_status_t payload_status = STATUS_OK;
+    binder_exception_t exception_code;
+    binder_status_t service_status;
+    bool aidl_ok;
+
+    pure nothrow @nogc bool ok() const
+    {
+        return transport_status == STATUS_OK
+            && header_status == STATUS_OK
+            && payload_status == STATUS_OK
+            && aidl_ok;
+    }
+}
+
+struct Utf8Sink {
+    char* buffer;
+    int capacity;
+    int length;
+    bool is_null;
+}
+
+extern(C) bool utf8_sink_allocator(
+    void* string_data,
+    int length,
+    char** output_buffer) nothrow @nogc
+{
+    auto sink = cast(Utf8Sink*) string_data;
+    if (sink is null)
+        return false;
+
+    if (length == -1) {
+        sink.length = -1;
+        sink.is_null = true;
+        if (output_buffer !is null)
+            *output_buffer = null;
+        return true;
+    }
+
+    // NDK supplies a length including the terminating NUL.
+    if (length <= 0 || length > sink.capacity || sink.buffer is null
+            || output_buffer is null)
+        return false;
+
+    sink.length = length - 1;
+    sink.is_null = false;
+    *output_buffer = sink.buffer;
+    return true;
+}
+
+void delete_parcel(AParcel* parcel) nothrow @nogc
+{
+    if (parcel !is null)
+        AParcel_delete(parcel);
+}
+
+bool aidl_prepare(
+    AIBinder* binder,
+    AParcel** input,
+    ref AidlCallStatus call) nothrow @nogc
+{
+    if (binder is null || input is null) {
+        call.aidl_ok = false;
+        return false;
+    }
+
+    *input = null;
+    call.transport_status = AIBinder_prepareTransaction(binder, input);
+    return call.transport_status == STATUS_OK && *input !is null;
+}
+
+bool aidl_finish(
+    AIBinder* binder,
+    transaction_code_t code,
+    AParcel** input,
+    AParcel** output,
+    ref AidlCallStatus call,
+    binder_flags_t flags = 0) nothrow @nogc
+{
+    if (binder is null || input is null || output is null) {
+        call.aidl_ok = false;
+        return false;
+    }
+
+    *output = null;
+    call.transport_status = AIBinder_transact(binder, code, input, output, flags);
+    if (call.transport_status != STATUS_OK || *output is null)
+        return false;
+
+    AStatus* remote_status = null;
+    call.header_status = AParcel_readStatusHeader(*output, &remote_status);
+    if (call.header_status != STATUS_OK || remote_status is null)
+        return false;
+
+    call.aidl_ok = AStatus_isOk(remote_status);
+    call.exception_code = AStatus_getExceptionCode(remote_status);
+    call.service_status = AStatus_getStatus(remote_status);
+    AStatus_delete(remote_status);
+
+    return call.aidl_ok;
+}
+
+pure nothrow @nogc bool has_transaction_class(AIBinder* binder)
+{
+    return binder !is null && AIBinder_getClass(binder) !is null;
+}
+
+bool associate_transaction_class(
+    AIBinder* binder,
+    const AIBinder_Class* interface_class) nothrow @nogc
+{
+    return binder !is null
+        && interface_class !is null
+        && AIBinder_associateClass(binder, interface_class);
+}
+
+extern(C) private void* remote_class_on_create(void* args) nothrow @nogc
+{
+    return args;
+}
+
+extern(C) private void remote_class_on_destroy(void* user_data) nothrow @nogc
+{
+}
+
+extern(C) private binder_status_t remote_class_on_transact(
+    AIBinder* binder,
+    transaction_code_t code,
+    const AParcel* input,
+    AParcel* output) nothrow @nogc
+{
+    return STATUS_UNKNOWN_TRANSACTION;
+}
+
+/**
+ * Define a class used only to associate a remote Binder with an AIDL descriptor.
+ * Call once per interface and retain the returned class for process lifetime.
+ */
+AIBinder_Class* define_remote_interface_class(const char* descriptor) nothrow @nogc
+{
+    if (descriptor is null)
+        return null;
+
+    return AIBinder_Class_define(
+        descriptor,
+        &remote_class_on_create,
+        &remote_class_on_destroy,
+        &remote_class_on_transact
+    );
+}

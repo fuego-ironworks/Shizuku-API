@@ -3,6 +3,9 @@ module ndk_compile;
 import ick.android;
 import shizuku.aidl_ndk;
 import shizuku.api_constants : BINDER_DESCRIPTOR;
+import shizuku.application_ndk_binder :
+    SHIZUKU_APPLICATION_DESCRIPTOR,
+    define_shizuku_application_class;
 import shizuku.remote_process_ndk_client :
     REMOTE_PROCESS_DESCRIPTOR,
     define_remote_process_class;
@@ -15,6 +18,8 @@ import shizuku.service_protocol :
     ServiceConnectionTransaction;
 
 static assert(BINDER_DESCRIPTOR == "moe.shizuku.server.IShizukuService");
+static assert(SHIZUKU_APPLICATION_DESCRIPTOR ==
+    "moe.shizuku.server.IShizukuApplication");
 static assert(REMOTE_PROCESS_DESCRIPTOR == "moe.shizuku.server.IRemoteProcess");
 static assert(SERVICE_CONNECTION_DESCRIPTOR ==
     "moe.shizuku.server.IShizukuServiceConnection");

@@ -7,10 +7,10 @@ stands between it and execution.
 | Upstream source | D translation | Status |
 | --- | --- | --- |
 | shared/ShizukuApiConstants.java | api_constants.d | translated |
-| IShizukuService.aidl | service_protocol.d, service_ndk_client.d | primitive calls native; Bundle/newProcess/object calls remain |
+| IShizukuService.aidl | service_protocol.d, service_ndk_client.d | primitive calls + V11 attach native; V13 Bundle/newProcess/object calls remain |
 | IRemoteProcess.aidl | service_protocol.d, remote_process_ndk_client.d | native proxy translated |
 | IShizukuServiceConnection.aidl | service_protocol.d, service_connection_ndk_binder.d | local Binder translated |
-| IShizukuApplication.aidl | service_protocol.d | transaction map only; Bundle callback codec remains |
+| IShizukuApplication.aidl | service_protocol.d, application_ndk_binder.d | normal-app Binder dispatch translated; Bundle decoding and Sui-only synchronous callback remain |
 | Shizuku.java | state.d, user_service.d, listeners.d, service_ndk_client.d | substantial; attach Bundle and Android Handler/Binder adapters remain |
 | ShizukuBinderWrapper.java | binder_wrapper_protocol.d | semantic framing translated; raw Parcel append/forward adapter remains |
 | ShizukuRemoteProcess.java | remote_process.d, remote_process_ndk_client.d | substantial/native proxy |

@@ -37,7 +37,8 @@ copying Binder/Parcel ABI declarations.
 - shared AIDL/libbinder_ndk transaction/status machinery;
 - direct API-29+ libbinder_ndk clients for primitive Shizuku service calls and
   all IRemoteProcess methods;
-- a local IShizukuServiceConnection Binder callback object;
+- local IShizukuServiceConnection and normal-app IShizukuApplication Binder callback objects;
+- the legacy V11 attachApplication native transaction;
 - initial Binder lifetime/liveness calls through the Ick Android ABI seam;
 - listener registration/sticky/dispatch ordering, AbiUtil caching, HandlerUtil slot semantics, and Rish entry control flow;
 - semantic unittests for the pure state/protocol layer.

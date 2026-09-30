@@ -4,6 +4,7 @@ import ick.android;
 public import shizuku.aidl_ndk :
     AidlCallStatus,
     Utf8Sink,
+    Utf8View,
     associate_transaction_class,
     has_transaction_class;
 import shizuku.aidl_ndk :
@@ -66,6 +67,56 @@ private bool read_bool_no_args(
     call.payload_status = AParcel_readBool(output, &value);
     delete_parcel(output);
     return call.ok();
+}
+
+/**
+ * Legacy Shizuku <= v12 attach transaction.
+ *
+ * This is transaction 14 from the old interface, not the current explicit
+ * attachApplication method id. AIBinder_prepareTransaction supplies the
+ * interface token; the payload is application binder + package name.
+ */
+bool attach_application_v11(
+    AIBinder* binder,
+    AIBinder* application,
+    Utf8View package_name,
+    out AidlCallStatus call) nothrow @nogc
+{
+    call = AidlCallStatus.init;
+
+    if (application is null || !package_name.valid()) {
+        call.interface_ok = false;
+        return false;
+    }
+
+    AParcel* input;
+    if (!aidl_prepare(binder, &input, call))
+        return false;
+
+    call.payload_status = AParcel_writeStrongBinder(input, application);
+    if (call.payload_status == STATUS_OK) {
+        call.payload_status = AParcel_writeString(
+            input,
+            package_name.is_null ? null : package_name.buffer,
+            package_name.is_null ? -1 : package_name.length
+        );
+    }
+
+    if (call.payload_status != STATUS_OK) {
+        delete_parcel(input);
+        return false;
+    }
+
+    AParcel* output;
+    const bool result = aidl_finish(
+        binder,
+        cast(transaction_code_t) 14,
+        &input,
+        &output,
+        call
+    );
+    delete_parcel(output);
+    return result && call.ok();
 }
 
 bool get_version(

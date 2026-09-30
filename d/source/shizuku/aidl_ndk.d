@@ -11,6 +11,7 @@ struct AidlCallStatus {
     binder_status_t payload_status = STATUS_OK;
     binder_exception_t exception_code;
     binder_status_t service_status;
+    bool interface_ok = true;
     bool aidl_ok;
 
     pure nothrow @nogc bool ok() const
@@ -18,6 +19,7 @@ struct AidlCallStatus {
         return transport_status == STATUS_OK
             && header_status == STATUS_OK
             && payload_status == STATUS_OK
+            && interface_ok
             && aidl_ok;
     }
 }
@@ -27,6 +29,17 @@ struct Utf8Sink {
     int capacity;
     int length;
     bool is_null;
+}
+
+struct Utf8View {
+    const(char)* buffer;
+    int length;
+    bool is_null;
+
+    pure nothrow @nogc bool valid() const
+    {
+        return is_null || (length >= 0 && (length == 0 || buffer !is null));
+    }
 }
 
 extern(C) bool utf8_sink_allocator(
@@ -69,6 +82,13 @@ bool aidl_prepare(
     ref AidlCallStatus call) nothrow @nogc
 {
     if (binder is null || input is null) {
+        call.interface_ok = false;
+        call.aidl_ok = false;
+        return false;
+    }
+
+    if (AIBinder_getClass(binder) is null) {
+        call.interface_ok = false;
         call.aidl_ok = false;
         return false;
     }

@@ -43,12 +43,18 @@ The lower-API compatibility path still needs the Java Binder/JNI bridge.
 streams, wait/exit/destroy/alive, and waitForTimeout calls. A local
 `IShizukuServiceConnection` Binder class decodes connected/died callbacks; the
 connected Binder is borrowed for the callback duration and must be retained
-explicitly with `AIBinder_incStrong` if stored.
+explicitly with `AIBinder_incStrong` if stored. A local `IShizukuApplication`
+Binder now handles the two normal-app callbacks as raw Bundle Parcel handoffs.
 
-Still missing are the methods carrying Bundle, Intent, string arrays, or the
-IShizukuApplication callback interface: attachApplication, newProcess,
-add/remove/attach user service, package-change dispatch, permission-confirmation
-dispatch, and related callbacks.
+The legacy V11 attach transaction is implemented natively because its payload
+is only application Binder + package name. V13 attach still needs Android
+Bundle serialization. Bundle decoding for `bindApplication` and permission
+results is deliberately delegated to a framework boundary instead of copying
+BaseBundle's private wire implementation.
+
+Still missing are V13 attachApplication, newProcess, add/remove/attach user
+service, package-change dispatch, permission-confirmation dispatch, and the
+Sui-only synchronous application callback.
 
 The Ick compiler also still rejects the external calls needed to execute this
 module on ARM. This source records the intended native implementation; it is not

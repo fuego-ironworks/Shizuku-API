@@ -497,3 +497,20 @@ unittest {
     assert(next_start_action(true) == RishStartAction.start_terminal);
     assert(terminal_failure_exit_code() == 1);
 }
+
+
+unittest {
+    Utf8View empty;
+    empty.buffer = "".ptr;
+    empty.length = 0;
+    assert(empty.valid());
+
+    Utf8View null_value;
+    null_value.is_null = true;
+    null_value.length = -1;
+    assert(null_value.valid());
+
+    Utf8View invalid;
+    invalid.length = 3;
+    assert(!invalid.valid());
+}

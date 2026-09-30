@@ -129,7 +129,7 @@ bool aidl_finish(
     return call.aidl_ok;
 }
 
-pure nothrow @nogc bool has_transaction_class(AIBinder* binder)
+nothrow @nogc bool has_transaction_class(AIBinder* binder)
 {
     return binder !is null && AIBinder_getClass(binder) !is null;
 }

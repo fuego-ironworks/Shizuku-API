@@ -514,3 +514,5 @@ unittest {
     invalid.length = 3;
     assert(!invalid.valid());
 }
+
+import shizuku.aidl_ndk : Utf8View;

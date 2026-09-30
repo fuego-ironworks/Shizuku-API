@@ -46,3 +46,4 @@ also needs that repository. This branch translates the complete API-side tree
 available here and keeps that distinction explicit.
 
 See PORTING.md for the remaining map and blockers.
+\nSee UPSTREAM_NOTES.md for pinned-source behaviors that look inconsistent and need device verification before the D port normalizes them.\n

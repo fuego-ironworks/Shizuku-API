@@ -225,3 +225,175 @@ unittest {
     assert(is_versioned_transaction_field("TRANSACTION_bar_", "TRANSACTION_bar"));
     assert(!is_versioned_transaction_field("TRANSACTION_bar_x", "TRANSACTION_bar"));
 }
+
+
+import shizuku.binder_container;
+import shizuku.remote_process;
+import shizuku.rish_host_policy;
+import shizuku.rish_service_policy;
+import shizuku.rish_terminal_policy;
+import shizuku.service_connections;
+import shizuku.system_properties;
+import shizuku.user_service_launch;
+
+unittest {
+    int iv;
+    long lv;
+
+    assert(try_decode_java_int("42", iv) && iv == 42);
+    assert(try_decode_java_int("0x2a", iv) && iv == 42);
+    assert(try_decode_java_int("#2A", iv) && iv == 42);
+    assert(try_decode_java_int("052", iv) && iv == 42);
+    assert(try_decode_java_int("-0x80000000", iv) && iv == int.min);
+    assert(!try_decode_java_int("0x80000000", iv));
+
+    assert(try_decode_java_long("-0x8000000000000000", lv) && lv == long.min);
+    assert(!try_decode_java_long("0x8000000000000000", lv));
+
+    assert(parse_java_boolean("true"));
+    assert(parse_java_boolean("TrUe"));
+    assert(!parse_java_boolean("1"));
+    assert(!parse_java_boolean(null));
+}
+
+final class TestServiceObserver : ServiceConnectionObserver {
+    int connected_count;
+    int disconnected_count;
+
+    override void on_service_connected(string component_class, void* binder)
+    {
+        ++connected_count;
+    }
+
+    override void on_service_disconnected(string component_class)
+    {
+        ++disconnected_count;
+    }
+}
+
+unittest {
+    UserServiceArgs args;
+    args.component_class = "example.Service";
+    args.tag = "";
+
+    auto cache = new ServiceConnectionCache;
+    auto a = cache.get(args);
+    auto b = cache.get(args);
+    assert(a is b);
+    assert(cache.length == 1);
+
+    auto observer = new TestServiceObserver;
+    assert(a.add_connection(observer));
+    assert(!a.add_connection(observer));
+
+    a.retain_connected_binder(cast(void*) 1);
+    a.notify_connected();
+    assert(observer.connected_count == 1);
+
+    assert(a.mark_died());
+    assert(!a.mark_died());
+    a.notify_died_and_clear();
+    assert(observer.disconnected_count == 1);
+    assert(a.connection_count == 0);
+
+    assert(cache.remove(a) == 1);
+    assert(cache.length == 0);
+}
+
+unittest {
+    UserServiceLaunchArgs args;
+    assert(parse_user_service_launch_args([
+        "--package=example.pkg",
+        "--class=example.Service",
+        "--uid=200123",
+        "--token=abc",
+        "--debug-name=first",
+        "--debug-name=second"
+    ], args));
+
+    assert(args.package_name == "example.pkg");
+    assert(args.class_name == "example.Service");
+    assert(args.token == "abc");
+    assert(args.debug_name == "second");
+    assert(args.user == 2);
+    assert(args.effective_debug_name == "second");
+
+    UserServiceLaunchArgs defaults;
+    assert(parse_user_service_launch_args(["--package=example.pkg"], defaults));
+    assert(defaults.effective_debug_name == "example.pkg:user_service");
+
+    assert(!parse_user_service_launch_args(["--uid=nope"], defaults));
+}
+
+unittest {
+    RemoteTimeUnit unit;
+    assert(parse_time_unit("SECONDS", unit));
+    assert(unit == RemoteTimeUnit.seconds);
+    assert(timeout_to_nanos(2, unit) == 2_000_000_000L);
+    assert(wait_poll_sleep_millis(1) == 1);
+    assert(wait_poll_sleep_millis(99_000_000) == 100);
+
+    RemoteProcessClientState state;
+    state.constructed();
+    assert(state.binder_present && state.in_reference_cache);
+    assert(state.needs_output_stream());
+    assert(!state.needs_output_stream());
+    assert(state.needs_error_stream());
+    state.binder_died();
+    assert(!state.binder_present && !state.in_reference_cache);
+}
+
+unittest {
+    ubyte[] block;
+    assert(c_bytes_for_string_array(["sh", "-c", "echo"], block));
+    assert(block.length == 11);
+    assert(block[2] == 0);
+    assert(block[5] == 0);
+    assert(block[$ - 1] == 0);
+
+    auto plan = tty_plan(cast(ubyte)(ATTY_IN | ATTY_OUT));
+    assert(plan.needs_ptmx());
+    assert(!plan.needs_stdin_pipe());
+    assert(!plan.needs_stdout_pipe());
+    assert(plan.needs_stderr_pipe());
+
+    assert(shell_argv(["-c", "id"])[0] == "/system/bin/sh");
+    assert(!use_explicit_environment(-1));
+    assert(!use_explicit_environment(0));
+    assert(use_explicit_environment(1));
+}
+
+unittest {
+    assert(!preserve_environment(false, ["PATH=/bin"]));
+    assert(preserve_environment(false, ["RISH_PRESERVE_ENV=1"]));
+    assert(!preserve_environment(true, ["RISH_PRESERVE_ENV=0"]));
+    assert(preserve_environment(true, [
+        "RISH_PRESERVE_ENV=1",
+        "RISH_PRESERVE_ENV=0"
+    ]));
+
+    assert(classify_rish_transaction(30_000, 30_000) == RishTransaction.create_host);
+    assert(classify_rish_transaction(30_002, 30_000) == RishTransaction.get_exit_code);
+    assert(!create_host_should_decode(false, false));
+    assert(!create_host_should_decode(true, true));
+    assert(create_host_should_decode(true, false));
+}
+
+unittest {
+    assert(detect_tty(true, true, true) == ATTY_ALL);
+    assert(selected_tty_fd(ATTY_OUT) == 1);
+    assert(makes_terminal_raw(ATTY_ALL));
+    assert(blocks_sigwinch(ATTY_OUT));
+    assert(needs_client_stderr_pipe(0));
+
+    auto fds = upstream_terminal_native_fds(10, 11, 12);
+    assert(fds.stdin_fd == 10);
+    assert(fds.stdout_fd == 11);
+    assert(fds.stderr_fd == 11);
+}
+
+unittest {
+    BinderContainer container;
+    container.binder = cast(void*) 1;
+    assert(container.describe_contents() == 0);
+}

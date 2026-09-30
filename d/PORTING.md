@@ -7,10 +7,10 @@ one convenient API surface.
 | --- | --- | --- |
 | shared | translated | ShizukuApiConstants translated exactly. |
 | aidl | protocol translated | All four interface transaction maps are represented. Raw Binder proxy/stub Parcel codecs remain. |
-| api | substantial | Core state, UserService argument semantics, client records, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/ServiceConnection adapters remain. |
-| provider | protocol/state translated | Constants, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
+| api | substantial | Core state, UserService arguments/launch parsing, client records, service-connection/cache state, system-property parsing, remote-process state, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/stream adapters remain. |
+| provider | protocol/state translated | Constants, BinderContainer holder semantics, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
 | server-shared | substantial policy translation | ConfigManager/entry, ClientRecord/ClientManager, UserService record state, UserServiceManager record/peek/start policy, Service permission/request/flag policy and UID helpers are translated. Binder/PackageManager/process/file-descriptor plumbing and Android runtime bootstrapping remain. |
-| rish | started | Constants/config/native-library selection translated. Terminal/host JNI and pty implementation remain. |
+| rish | substantial policy translation | Constants/config, C-string blocks, environment rules, tty/pipe planning, transaction routing, terminal/native fd behavior and exit semantics are translated. POSIX/Bionic execution, pthread transfer loops and Binder Parcel adapters remain. |
 | demo | deferred test consumer | Translate after the API path can execute on device. |
 | demo-hidden-api-stub | mapped | Preserve hidden API declarations as an explicit Android boundary. |
 

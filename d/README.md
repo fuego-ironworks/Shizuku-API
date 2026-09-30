@@ -39,6 +39,7 @@ copying Binder/Parcel ABI declarations.
   all IRemoteProcess methods;
 - a local IShizukuServiceConnection Binder callback object;
 - initial Binder lifetime/liveness calls through the Ick Android ABI seam;
+- listener registration/sticky/dispatch ordering, AbiUtil caching, HandlerUtil slot semantics, and Rish entry control flow;
 - semantic unittests for the pure state/protocol layer.
 
 Two early translation drifts were corrected while extending this branch:
@@ -52,6 +53,6 @@ the separate RikkaApps/Shizuku repository. A literal whole-program Shizuku port
 also needs that repository. This branch translates the complete API-side tree
 available here and keeps that distinction explicit.
 
-See PORTING.md for the remaining map and blockers. See NDK_BINDER.md for the direct native Binder slice.
+See COVERAGE.md for file-by-file status, PORTING.md for the remaining map and blockers, and NDK_BINDER.md for the direct native Binder slice.
 
 See UPSTREAM_NOTES.md for pinned-source behaviors that look inconsistent and need device verification before the D port normalizes them.

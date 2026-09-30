@@ -404,3 +404,96 @@ unittest {
     assert(time_unit_name(RemoteTimeUnit.seconds) == "SECONDS");
     assert(time_unit_name(RemoteTimeUnit.days) == "DAYS");
 }
+
+
+import shizuku.abi_util;
+import shizuku.handler_slot;
+import shizuku.listeners;
+import shizuku.rish_entry;
+
+unittest {
+    Abi32Cache cache;
+    assert(!cache.initialized());
+    assert(!cache.has_32_bit(0));
+    assert(cache.initialized());
+
+    // Java caches the first result.
+    assert(!cache.has_32_bit(3));
+}
+
+unittest {
+    auto slot = new HandlerSlot;
+    assert(!slot.is_set());
+
+    bool threw;
+    try {
+        slot.get_main_handler();
+    } catch (MainHandlerNotSet) {
+        threw = true;
+    }
+    assert(threw);
+
+    slot.set_main_handler(cast(void*) 1);
+    assert(slot.is_set());
+    assert(slot.get_main_handler() == cast(void*) 1);
+}
+
+unittest {
+    ServerState state;
+    bool callback_saw_ready;
+    int received_count;
+    int permission_code;
+    int permission_result_value;
+
+    void received_listener()
+    {
+        ++received_count;
+        callback_saw_ready = state.binder_ready;
+    }
+
+    void permission_listener(int request_code, int result)
+    {
+        permission_code = request_code;
+        permission_result_value = result;
+    }
+
+    bool on_main()
+    {
+        return true;
+    }
+
+    auto listeners = new ListenerRegistry(
+        &state,
+        null,
+        null,
+        &on_main
+    );
+
+    listeners.add_received(&received_listener);
+    listeners.schedule_received();
+
+    assert(received_count == 1);
+    assert(!callback_saw_ready);
+    assert(state.binder_ready);
+
+    // Sticky registration invokes immediately when ready, then registers.
+    listeners.add_received(&received_listener, true);
+    assert(received_count == 2);
+    assert(listeners.received_count == 2);
+
+    listeners.add_permission(&permission_listener);
+    listeners.schedule_permission(7, -1);
+    assert(permission_code == 7);
+    assert(permission_result_value == -1);
+
+    assert(listeners.remove_received(&received_listener));
+    assert(listeners.received_count == 1);
+    assert(listeners.remove_permission(&permission_listener));
+    assert(listeners.permission_count == 0);
+}
+
+unittest {
+    assert(next_start_action(false) == RishStartAction.request_permission);
+    assert(next_start_action(true) == RishStartAction.start_terminal);
+    assert(terminal_failure_exit_code() == 1);
+}

@@ -44,6 +44,8 @@ from a synthetic ABI call to a real Shizuku transaction once Binder class
 association is wired. Bundle/Intent/callback codecs and older-API compatibility
 remain separate work.
 
+File-by-file status is tracked in COVERAGE.md.
+
 ## Next translation slices independent of that seam
 
 - local IShizukuApplication Binder class;

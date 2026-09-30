@@ -516,3 +516,107 @@ unittest {
 }
 
 import shizuku.aidl_ndk : Utf8View;
+
+
+import shizuku.user_service_registry;
+
+unittest {
+    UserServiceRecordState state;
+    assert(begin_starting(state));
+    assert(state.starting);
+    assert(!begin_starting(state));
+
+    state.binder_received();
+    assert(state.binder_present);
+    // Exact upstream behavior: setBinder does not clear starting.
+    assert(state.starting);
+
+    auto plan = destroy_plan(true, true);
+    assert(plan.unlink_death);
+    assert(plan.send_destroy_oneway);
+    assert(plan.kill_callbacks);
+
+    plan = destroy_plan(true, false);
+    assert(plan.unlink_death);
+    assert(!plan.send_destroy_oneway);
+    assert(plan.kill_callbacks);
+
+    assert(callback_died_should_remove(false, 0));
+    assert(!callback_died_should_remove(true, 0));
+    assert(!callback_died_should_remove(false, 1));
+}
+
+unittest {
+    auto registry = new UserServiceRegistry;
+    auto connection_a = cast(void*) 1;
+    auto connection_b = cast(void*) 2;
+
+    auto missing13 = registry.add(
+        "pkg", "Service", null,
+        1, true, true, 13,
+        connection_a, false, "unused"
+    );
+    assert(missing13.valid);
+    assert(missing13.result == -1);
+    assert(registry.active_count == 0);
+
+    auto missing12 = registry.add(
+        "pkg", "Service", null,
+        1, true, true, 12,
+        connection_a, false, "unused"
+    );
+    assert(missing12.result == 1);
+
+    auto created = registry.add(
+        "pkg", "Service", null,
+        1, true, false, 13,
+        connection_a, false, "token-1"
+    );
+    assert(created.valid);
+    assert(created.created);
+    assert(created.start_process);
+    assert(created.callback_registered);
+    assert(created.record.state.starting);
+    assert(registry.active_count == 1);
+    assert(registry.package_history_count("pkg") == 1);
+
+    created.record.binder_received();
+    assert(created.record.state.starting);
+
+    auto reused = registry.add(
+        "pkg", "Service", null,
+        1, false, false, 13,
+        connection_b, true, "unused"
+    );
+    assert(reused.record is created.record);
+    assert(!reused.created);
+    assert(reused.broadcast_existing_binder);
+    assert(!reused.start_process);
+    assert(!reused.record.state.daemon);
+    assert(reused.record.callback_count == 2);
+
+    auto replaced = registry.add(
+        "pkg", "Service", null,
+        2, true, false, 13,
+        connection_a, false, "token-2"
+    );
+    assert(replaced.created);
+    assert(replaced.replaced);
+    assert(replaced.record !is created.record);
+    assert(created.record.destroyed);
+    assert(registry.active_count == 1);
+
+    // Java keeps the removed record in the package-side list.
+    assert(registry.package_history_count("pkg") == 2);
+
+    auto detached = registry.remove(
+        "pkg", "Service", null, false, connection_a
+    );
+    assert(detached.result == 0);
+    assert(detached.callback_unregistered);
+    assert(registry.active_count == 1);
+
+    assert(registry.remove_for_package("pkg") == 1);
+    assert(registry.active_count == 0);
+    assert(registry.package_history_count("pkg") == 0);
+}

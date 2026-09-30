@@ -86,14 +86,71 @@ struct UserServiceRecordState {
         return starting;
     }
 
+    /**
+     * Exact UserServiceRecord.setBinder behavior: receiving the Binder cancels
+     * the scheduled timeout externally but does NOT clear the `starting` flag.
+     */
     void binder_received() pure nothrow @nogc
     {
-        starting = false;
         binder_present = true;
     }
 
-    void binder_died() pure nothrow @nogc
+    /**
+     * The Java death recipient removes the whole record. This state method
+     * clears the local Binder bit and tells the registry to remove it.
+     */
+    bool binder_died() pure nothrow @nogc
     {
         binder_present = false;
+        return true;
     }
+}
+
+
+struct UserServiceDestroyPlan {
+    bool unlink_death;
+    bool send_destroy_oneway;
+    bool kill_callbacks;
+}
+
+pure nothrow @nogc UserServiceDestroyPlan destroy_plan(
+    bool service_present,
+    bool service_alive)
+{
+    UserServiceDestroyPlan plan;
+    plan.unlink_death = service_present;
+    plan.send_destroy_oneway = service_present && service_alive;
+    plan.kill_callbacks = true;
+    return plan;
+}
+
+/**
+ * Mirrors setStartingTimeout: calling it while already starting is a no-op.
+ * On the first call the Java record sets starting=true and schedules a timeout.
+ */
+pure nothrow @nogc bool begin_starting(ref UserServiceRecordState state)
+{
+    if (state.starting)
+        return false;
+
+    state.starting = true;
+    return true;
+}
+
+/** The delayed callback removes the record only if starting is still true. */
+pure nothrow @nogc bool starting_timeout_should_remove(
+    const UserServiceRecordState state)
+{
+    return state.starting;
+}
+
+/**
+ * RemoteCallbackList invokes onCallbackDied after dropping the dead callback.
+ * The record removes itself only for non-daemon mode with no callbacks left.
+ */
+pure nothrow @nogc bool callback_died_should_remove(
+    bool daemon,
+    size_t registered_callbacks_after_death)
+{
+    return !daemon && registered_callbacks_after_death == 0;
 }

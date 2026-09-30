@@ -27,8 +27,8 @@ stands between it and execution.
 | ConfigPackageEntry.java | config.d | translated abstract contract |
 | Service.java | service_policy.d | permission/dispatch policy; Binder server/framework calls remain |
 | UserService.java | user_service_launch.d | argument parsing; ActivityThread/class-loader bootstrap remains |
-| UserServiceManager.java | user_service_manager_policy.d | record decisions translated; Android package/process plumbing remains |
-| UserServiceRecord.java | user_service.d | lifecycle semantics; Binder callbacks/timers remain |
+| UserServiceManager.java | user_service_manager_policy.d, user_service_registry.d | record tables, replacement/peek/remove/package history translated; Android package validation/process launch remain |
+| UserServiceRecord.java | user_service.d | lifecycle/start-timeout/destroy decisions translated; Binder callback delivery/timer scheduling remain |
 | RemoteProcessHolder.java | remote_process.d | timeout/lifetime semantics; Process/PFD adapter remains |
 | AbiUtil.java | abi_util.d | translated with boundary-supplied ABI count |
 | HandlerUtil.java | handler_slot.d | translated opaque slot |

@@ -26,6 +26,11 @@ copying Binder/Parcel ABI declarations.
 - rish tty flags, transaction offsets, configuration, and native-library path
   selection;
 - Sui bridge constants;
+- UserServiceManager record replacement, peek/remove defaults, start decisions,
+  and 32-bit selection policy;
+- Service manager/caller permission decisions, permission-request behavior,
+  caller API-version selection, and remote transaction flag decoding;
+- SystemServiceHelper transaction-field/cache-key and versioned-field fallback logic;
 - initial Binder lifetime/liveness calls through the Ick Android ABI seam;
 - semantic unittests for the pure state/protocol layer.
 

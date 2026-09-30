@@ -31,6 +31,11 @@ copying Binder/Parcel ABI declarations.
 - Service manager/caller permission decisions, permission-request behavior,
   caller API-version selection, and remote transaction flag decoding;
 - SystemServiceHelper transaction-field/cache-key and versioned-field fallback logic;
+- system-property Java decode/boolean semantics;
+- service-connection cache/death state, BinderContainer semantics, and user-service launch parsing;
+- remote-process lifetime/time-unit policy and Rish host/service/terminal native planning;
+- direct API-29+ libbinder_ndk clients for primitive Shizuku service calls,
+  including AIDL status-header handling;
 - initial Binder lifetime/liveness calls through the Ick Android ABI seam;
 - semantic unittests for the pure state/protocol layer.
 
@@ -45,5 +50,6 @@ the separate RikkaApps/Shizuku repository. A literal whole-program Shizuku port
 also needs that repository. This branch translates the complete API-side tree
 available here and keeps that distinction explicit.
 
-See PORTING.md for the remaining map and blockers.
-\nSee UPSTREAM_NOTES.md for pinned-source behaviors that look inconsistent and need device verification before the D port normalizes them.\n
+See PORTING.md for the remaining map and blockers. See NDK_BINDER.md for the direct native Binder slice.
+
+See UPSTREAM_NOTES.md for pinned-source behaviors that look inconsistent and need device verification before the D port normalizes them.

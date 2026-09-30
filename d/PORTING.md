@@ -6,7 +6,7 @@ one convenient API surface.
 | Original area | D status | Notes |
 | --- | --- | --- |
 | shared | translated | ShizukuApiConstants translated exactly. |
-| aidl | protocol translated | All four interface transaction maps are represented. Raw Binder proxy/stub Parcel codecs remain. |
+| aidl | protocol + primitive client | All four interface transaction maps are represented. An API-29+ NDK client now implements the primitive IShizukuService calls with AIDL status headers; Bundle/Intent/callback/array/object codecs and local stubs remain. |
 | api | substantial | Core state, UserService arguments/launch parsing, client records, service-connection/cache state, system-property parsing, remote-process state, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/stream adapters remain. |
 | provider | protocol/state translated | Constants, BinderContainer holder semantics, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
 | server-shared | substantial policy translation | ConfigManager/entry, ClientRecord/ClientManager, UserService record state, UserServiceManager record/peek/start policy, Service permission/request/flag policy and UID helpers are translated. Binder/PackageManager/process/file-descriptor plumbing and Android runtime bootstrapping remain. |
@@ -38,15 +38,18 @@ The D source can therefore express the real boundary now, but it cannot yet be
 claimed as a runnable Shizuku replacement.
 
 The next executable milestone is call/relocation lowering plus a physical-device
-probe that links one D function against libbinder_ndk and liblog. After that,
-implement the raw AIDL proxy/stub Parcel codecs, then wire the Java-framework-
-only provider/Bundle/Handler pieces.
+probe that links one D function against libbinder_ndk and liblog. A primitive
+IShizukuService NDK proxy is now present in source, so that probe can graduate
+from a synthetic ABI call to a real Shizuku transaction once Binder class
+association is wired. Bundle/Intent/callback codecs and older-API compatibility
+remain separate work.
 
 ## Next translation slices independent of that seam
 
-- UserServiceManager record lookup/restart/remove logic;
-- Service permission/config dispatch logic;
-- ShizukuRemoteProcess semantic wrapper and lifetime state;
-- rish host/terminal protocol and pty transfer logic;
-- SystemServiceHelper lookup policy;
-- provider BinderContainer representation.
+- local IShizukuApplication and IShizukuServiceConnection Binder classes;
+- attachApplication V13 Bundle codec and V11 compatibility transaction;
+- add/remove/attach user-service Bundle codecs;
+- newProcess string-array and remote-process Binder codec;
+- provider ContentProvider/Bundle/Intent/Handler adapters;
+- rish POSIX/Bionic fork/pty/transfer implementation;
+- server-side Binder stub and Android PackageManager/property/process adapters;

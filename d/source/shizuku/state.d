@@ -15,6 +15,10 @@ struct ServerState {
     bool pre_v11;
     bool binder_ready;
 
+    /**
+     * Full local reset. This is stronger than Shizuku.java's binder-death path.
+     * Use binder_lost() when translating onBinderReceived(null, ...).
+     */
     void reset()
     {
         uid = -1;
@@ -24,6 +28,19 @@ struct ServerState {
         permission_granted = false;
         should_show_permission_rationale = false;
         pre_v11 = false;
+        binder_ready = false;
+    }
+
+    /**
+     * Exact state cleared by Shizuku.onBinderReceived(null, null).
+     * Upstream intentionally does not clear patch_version, permission state,
+     * rationale state, or pre_v11 here.
+     */
+    void binder_lost()
+    {
+        uid = -1;
+        api_version = -1;
+        security_context = null;
         binder_ready = false;
     }
 
@@ -59,9 +76,13 @@ struct UserServiceArgs {
     bool daemon = true;
     bool use_32_bit_app_process;
 
-    string connection_key() const pure nothrow
+    /**
+     * Java checks tag != null, not tag.length != 0. An explicitly empty tag is
+     * therefore a real cache key and must not fall back to component_class.
+     */
+    string connection_key() const pure nothrow @nogc
     {
-        return tag.length != 0 ? tag : component_class;
+        return tag !is null ? tag : component_class;
     }
 }
 

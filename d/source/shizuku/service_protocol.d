@@ -36,6 +36,36 @@ pure nothrow @nogc transaction_code_t transaction(ServiceMethodId method)
     return cast(transaction_code_t)(cast(uint) method + 1u);
 }
 
+/** IRemoteProcess.aidl uses normal declaration order: transactions 1..8. */
+enum RemoteProcessTransaction : uint {
+    get_output_stream = 1,
+    get_input_stream = 2,
+    get_error_stream = 3,
+    wait_for = 4,
+    exit_value = 5,
+    destroy = 6,
+    alive = 7,
+    wait_for_timeout = 8
+}
+
+/** Explicit ids from IShizukuApplication.aidl, again offset by 1. */
+enum ShizukuApplicationMethodId : uint {
+    bind_application = 1,
+    dispatch_request_permission_result = 2,
+    show_permission_confirmation = 10_000
+}
+
+pure nothrow @nogc transaction_code_t application_transaction(ShizukuApplicationMethodId method)
+{
+    return cast(transaction_code_t)(cast(uint) method + 1u);
+}
+
+/** IShizukuServiceConnection.aidl declaration order. */
+enum ServiceConnectionTransaction : uint {
+    connected = 1,
+    died = 2
+}
+
 enum transaction_code_t TRANSACTION_REMOTE = BINDER_TRANSACTION_transact;
 enum transaction_code_t TRANSACTION_ATTACH_APPLICATION_V13 = 18;
 enum transaction_code_t TRANSACTION_ATTACH_APPLICATION_V11 = 14;
@@ -43,3 +73,8 @@ enum transaction_code_t TRANSACTION_ATTACH_APPLICATION_V11 = 14;
 static assert(transaction(ServiceMethodId.attach_application) == TRANSACTION_ATTACH_APPLICATION_V13);
 static assert(transaction(ServiceMethodId.add_user_service) == 12);
 static assert(transaction(ServiceMethodId.remove_user_service) == 13);
+static assert(application_transaction(ShizukuApplicationMethodId.bind_application) == 2);
+static assert(application_transaction(ShizukuApplicationMethodId.dispatch_request_permission_result) == 3);
+static assert(application_transaction(ShizukuApplicationMethodId.show_permission_confirmation) == 10_001);
+static assert(RemoteProcessTransaction.wait_for_timeout == 8);
+static assert(ServiceConnectionTransaction.died == 2);

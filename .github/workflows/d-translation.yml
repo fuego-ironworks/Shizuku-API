@@ -1,0 +1,98 @@
+name: D translation compile
+
+on:
+  push:
+    branches: [D]
+    paths:
+      - 'd/**'
+      - '.github/workflows/d-translation.yml'
+  pull_request:
+    paths:
+      - 'd/**'
+      - '.github/workflows/d-translation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  icky-dmd-compile:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact Shizuku source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Read exact Ick pin
+        id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          ick_sha=$(sed -n 's/^ick_touchpoints_commit=//p' d/SOURCE.lock)
+          test -n "$ick_sha"
+          echo "ick_sha=$ick_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch exact Ick source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git init ick
+          git -C ick remote add origin https://github.com/dilapidated-shed/ick.git
+          git -C ick fetch --depth=1 origin "${{ steps.pin.outputs.ick_sha }}"
+          git -C ick checkout --detach FETCH_HEAD
+          test "$(git -C ick rev-parse HEAD)" = "${{ steps.pin.outputs.ick_sha }}"
+
+      - name: Install build-host dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl xz-utils
+          mkdir -p build/bootstrap build/d-compile
+          curl --fail --location --retry 3 \
+            https://github.com/dlang/dmd/releases/download/v2.113.0/dmd.2.113.0.linux.tar.xz \
+            -o build/bootstrap.tar.xz
+          echo 'b342ab8bd40cc0c46407692b31d7cd69661ff01da686234f426949e881727294  build/bootstrap.tar.xz' \
+            | sha256sum -c -
+          tar -xJf build/bootstrap.tar.xz -C build/bootstrap
+          echo "$GITHUB_WORKSPACE/build/bootstrap/dmd2/linux/bin64" >> "$GITHUB_PATH"
+
+      - name: Build owned Icky DMD
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd ick/dmd/compiler/src
+          dmd -run ./build.d dmd HOST_DMD="$(command -v dmd)"
+          dmd_bin=$(find ../../generated -type f -name dmd -perm -u+x -print -quit)
+          test -x "$dmd_bin"
+          "$dmd_bin" --version
+          cp "$dmd_bin" "$GITHUB_WORKSPACE/build/d-compile/icky-dmd"
+
+      - name: Type-check complete D translation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p build/d-compile/objects
+          mapfile -t sources < <(find d/source/shizuku -type f -name '*.d' -print | sort)
+          build/d-compile/icky-dmd \
+            -c -unittest \
+            -I=d/source \
+            -I=ick/dmd/library \
+            -I=build/bootstrap/dmd2/src/druntime/import \
+            -I=build/bootstrap/dmd2/src/phobos \
+            -od=build/d-compile/objects \
+            "${sources[@]}" \
+            d/tests/state_test.d \
+            d/tests/translation_test.d \
+            d/tests/ndk_compile.d
+
+      - name: Record boundary
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'TEXT'
+          This job type-checks the complete D translation with the exact pinned
+          Icky DMD source. It does not link libbinder_ndk, run on Android, or
+          claim that Ick's Android external-call/relocation gate has passed.
+          TEXT

@@ -163,7 +163,7 @@ bool should_show_request_permission_rationale(
 
 bool check_permission(
     AIBinder* binder,
-    const char* permission,
+    const(char)* permission,
     int permission_length,
     out int result,
     out AidlCallStatus call) nothrow @nogc
@@ -304,9 +304,9 @@ bool update_flags_for_uid(
 
 bool get_system_property(
     AIBinder* binder,
-    const char* name,
+    const(char)* name,
     int name_length,
-    const char* default_value,
+    const(char)* default_value,
     int default_length,
     ref Utf8Sink result,
     out AidlCallStatus call) nothrow @nogc
@@ -347,9 +347,9 @@ bool get_system_property(
 
 bool set_system_property(
     AIBinder* binder,
-    const char* name,
+    const(char)* name,
     int name_length,
-    const char* value,
+    const(char)* value,
     int value_length,
     out AidlCallStatus call) nothrow @nogc
 {

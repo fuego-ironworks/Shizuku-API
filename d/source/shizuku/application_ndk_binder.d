@@ -11,14 +11,14 @@ enum string SHIZUKU_APPLICATION_DESCRIPTOR =
 alias BindApplicationParcelCallback =
     binder_status_t function(
         void* context,
-        const AParcel* bundle_payload
+        const(AParcel)* bundle_payload
     ) nothrow @nogc;
 
 alias PermissionResultParcelCallback =
     binder_status_t function(
         void* context,
         int request_code,
-        const AParcel* bundle_payload
+        const(AParcel)* bundle_payload
     ) nothrow @nogc;
 
 struct ShizukuApplicationCallbacks {
@@ -40,7 +40,7 @@ extern(C) private void application_on_destroy(void* user_data) nothrow @nogc
 extern(C) private binder_status_t application_on_transact(
     AIBinder* binder,
     transaction_code_t code,
-    const AParcel* input,
+    const(AParcel)* input,
     AParcel* output) nothrow @nogc
 {
     if (binder is null || input is null)
@@ -101,7 +101,7 @@ AIBinder_Class* define_shizuku_application_class() nothrow @nogc
 }
 
 AIBinder* new_shizuku_application_binder(
-    const AIBinder_Class* application_class,
+    const(AIBinder_Class)* application_class,
     ShizukuApplicationCallbacks* callbacks) nothrow @nogc
 {
     if (application_class is null || callbacks is null)

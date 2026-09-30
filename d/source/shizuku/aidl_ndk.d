@@ -136,7 +136,7 @@ pure nothrow @nogc bool has_transaction_class(AIBinder* binder)
 
 bool associate_transaction_class(
     AIBinder* binder,
-    const AIBinder_Class* interface_class) nothrow @nogc
+    const(AIBinder_Class)* interface_class) nothrow @nogc
 {
     return binder !is null
         && interface_class !is null
@@ -155,7 +155,7 @@ extern(C) private void remote_class_on_destroy(void* user_data) nothrow @nogc
 extern(C) private binder_status_t remote_class_on_transact(
     AIBinder* binder,
     transaction_code_t code,
-    const AParcel* input,
+    const(AParcel)* input,
     AParcel* output) nothrow @nogc
 {
     return STATUS_UNKNOWN_TRANSACTION;
@@ -165,7 +165,7 @@ extern(C) private binder_status_t remote_class_on_transact(
  * Define a class used only to associate a remote Binder with an AIDL descriptor.
  * Call once per interface and retain the returned class for process lifetime.
  */
-AIBinder_Class* define_remote_interface_class(const char* descriptor) nothrow @nogc
+AIBinder_Class* define_remote_interface_class(const(char)* descriptor) nothrow @nogc
 {
     if (descriptor is null)
         return null;

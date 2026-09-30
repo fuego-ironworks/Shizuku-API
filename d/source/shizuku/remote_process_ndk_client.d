@@ -15,7 +15,7 @@ AIBinder_Class* define_remote_process_class() nothrow @nogc
 
 bool associate_remote_process_class(
     AIBinder* binder,
-    const AIBinder_Class* remote_class) nothrow @nogc
+    const(AIBinder_Class)* remote_class) nothrow @nogc
 {
     return associate_transaction_class(binder, remote_class);
 }

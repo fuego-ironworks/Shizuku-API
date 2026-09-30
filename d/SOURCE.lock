@@ -3,5 +3,5 @@ upstream_branch=master
 upstream_commit=a27f6e4151ba7b39965ca47edb2bf0aeed7102e5
 ick_repository=https://github.com/dilapidated-shed/ick
 ick_branch=dmd-shizuku-android-touchpoints
-ick_touchpoints_commit=b4c152825a0001fc876829fc83dd8c0e1df7e059
+ick_touchpoints_commit=8abc96bbe8909f5bb2fd0cc8fc35499be97f1cee
 translation=whole-hog

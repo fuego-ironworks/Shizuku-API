@@ -30,7 +30,7 @@ extern(C) private void connection_on_destroy(void* user_data) nothrow @nogc
 extern(C) private binder_status_t connection_on_transact(
     AIBinder* binder,
     transaction_code_t code,
-    const AParcel* input,
+    const(AParcel)* input,
     AParcel* output) nothrow @nogc
 {
     if (binder is null || input is null)
@@ -82,7 +82,7 @@ AIBinder_Class* define_service_connection_class() nothrow @nogc
 }
 
 AIBinder* new_service_connection_binder(
-    const AIBinder_Class* connection_class,
+    const(AIBinder_Class)* connection_class,
     ServiceConnectionCallbacks* callbacks) nothrow @nogc
 {
     if (connection_class is null || callbacks is null)

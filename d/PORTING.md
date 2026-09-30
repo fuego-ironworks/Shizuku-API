@@ -9,7 +9,7 @@ one convenient API surface.
 | aidl | protocol translated | All four interface transaction maps are represented. Raw Binder proxy/stub Parcel codecs remain. |
 | api | substantial | Core state, UserService argument semantics, client records, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/ServiceConnection adapters remain. |
 | provider | protocol/state translated | Constants, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
-| server-shared | started | ConfigManager/entry, ClientRecord/ClientManager, UserService record state and UID helpers are translated. UserServiceManager, Service, process/file-descriptor plumbing and Android runtime bootstrapping remain. |
+| server-shared | substantial policy translation | ConfigManager/entry, ClientRecord/ClientManager, UserService record state, UserServiceManager record/peek/start policy, Service permission/request/flag policy and UID helpers are translated. Binder/PackageManager/process/file-descriptor plumbing and Android runtime bootstrapping remain. |
 | rish | started | Constants/config/native-library selection translated. Terminal/host JNI and pty implementation remain. |
 | demo | deferred test consumer | Translate after the API path can execute on device. |
 | demo-hidden-api-stub | mapped | Preserve hidden API declarations as an explicit Android boundary. |

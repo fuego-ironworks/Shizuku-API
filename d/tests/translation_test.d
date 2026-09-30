@@ -165,3 +165,63 @@ unittest {
     assert(manager.remove_client(record));
     assert(manager.length == 0);
 }
+
+
+import shizuku.service_policy;
+import shizuku.system_service_policy;
+import shizuku.user_service_manager_policy;
+
+unittest {
+    assert(user_service_key("pkg", null, "Service") == "pkg:Service");
+    assert(user_service_key("pkg", "", "Service") == "pkg:");
+
+    assert(remove_option(false, false));
+    assert(!remove_option(true, false));
+
+    assert(peek_result(true, true, 7, 13) == 7);
+    assert(peek_result(true, true, 7, 12) == 0);
+    assert(peek_result(false, false, 0, 13) == -1);
+    assert(peek_result(false, false, 0, 12) == 1);
+
+    assert(existing_record_decision(false, 0, 1, false, false, false)
+        == ExistingRecordDecision.create_new);
+    assert(existing_record_decision(true, 1, 2, false, true, true)
+        == ExistingRecordDecision.replace_version_mismatch);
+    assert(existing_record_decision(true, 1, 1, false, false, false)
+        == ExistingRecordDecision.replace_dead);
+    assert(existing_record_decision(true, 1, 1, true, false, false)
+        == ExistingRecordDecision.reuse_existing);
+}
+
+unittest {
+    assert(manager_permission_decision(10, 10, false)
+        == ManagerPermissionDecision.allow);
+    assert(calling_permission_decision(1000, 2000, false, false, false)
+        == CallingPermissionDecision.deny_unattached);
+    assert(calling_permission_decision(1000, 2000, false, true, false)
+        == CallingPermissionDecision.deny_permission);
+    assert(calling_permission_decision(1000, 2000, false, true, true)
+        == CallingPermissionDecision.allow);
+
+    assert(permission_request_action(1000, 20, 2000, 30, true, false)
+        == PermissionRequestAction.reply_allowed);
+    assert(permission_request_action(1000, 20, 2000, 30, false, true)
+        == PermissionRequestAction.reply_denied);
+    assert(permission_request_action(1000, 20, 2000, 30, false, false)
+        == PermissionRequestAction.show_confirmation);
+
+    assert(effective_calling_api_version(false, 0) == 13);
+    assert(remote_target_flags(true, 13, 7, 3) == 7);
+    assert(remote_target_flags(true, 12, 7, 3) == 3);
+}
+
+unittest {
+    assert(transaction_field_name("getInstalledPackages")
+        == "TRANSACTION_getInstalledPackages");
+    assert(transaction_cache_key("android.foo.Stub", "bar")
+        == "android.foo.Stub.TRANSACTION_bar");
+
+    assert(is_versioned_transaction_field("TRANSACTION_bar_2", "TRANSACTION_bar"));
+    assert(is_versioned_transaction_field("TRANSACTION_bar_", "TRANSACTION_bar"));
+    assert(!is_versioned_transaction_field("TRANSACTION_bar_x", "TRANSACTION_bar"));
+}

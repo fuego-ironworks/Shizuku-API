@@ -37,6 +37,22 @@ is transaction-ready.
 This path is API 29+. It does not replace Shizuku-API's older Android support.
 The lower-API compatibility path still needs the Java Binder/JNI bridge.
 
+## Rish raw file-descriptor boundary
+
+`rish_ndk_client.d` now translates the client-side `createHost` transaction:
+tty flags, nullable string arrays, working directory, transaction-code offset,
+and normal Binder reply/status handling all use the shared D NDK machinery.
+
+One field cannot use the public NDK helper. Upstream Rish writes descriptors
+with Java `Parcel.writeFileDescriptor` and reads them with
+`Parcel.readFileDescriptor`. `AParcel_writeParcelFileDescriptor` represents
+`android.os.ParcelFileDescriptor`, which has different wire framing. The D
+client therefore injects a narrow `RishRawFdWriter` boundary instead of
+silently substituting the incompatible NDK encoding.
+
+The same distinction applies to the server-side decoder. The raw-FD bridge
+belongs in the Android/Ick boundary; the Rish protocol remains unchanged.
+
 ## Still missing from the NDK client
 
 `IRemoteProcess` now has a complete native proxy for its three file-descriptor

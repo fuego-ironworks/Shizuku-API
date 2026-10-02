@@ -42,6 +42,44 @@ struct Utf8View {
     }
 }
 
+/** Caller-owned UTF-8 array view for AParcel_writeStringArray. */
+struct Utf8ArrayView {
+    const(Utf8View)* values;
+    int length;
+    bool is_null;
+
+    pure nothrow @nogc bool valid() const
+    {
+        if (is_null)
+            return true;
+        if (length < 0 || (length > 0 && values is null))
+            return false;
+
+        foreach (i; 0 .. cast(size_t) length) {
+            if (!values[i].valid())
+                return false;
+        }
+        return true;
+    }
+}
+
+extern(C) const(char)* utf8_array_element_getter(
+    const(void)* array_data,
+    size_t index,
+    int* out_length) nothrow @nogc
+{
+    if (array_data is null || out_length is null)
+        return null;
+
+    auto view = cast(const(Utf8ArrayView)*) array_data;
+    if (view.is_null || index >= cast(size_t) view.length)
+        return null;
+
+    const element = view.values[index];
+    *out_length = element.is_null ? -1 : element.length;
+    return element.is_null ? null : element.buffer;
+}
+
 extern(C) bool utf8_sink_allocator(
     void* string_data,
     int length,

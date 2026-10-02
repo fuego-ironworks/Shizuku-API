@@ -38,8 +38,8 @@ stands between it and execution.
 | UserHandleCompat.java | user_handle.d | translated |
 | Rish.java | rish_entry.d | control flow translated |
 | RishConfig.java / RishConstants.java | rish_config.d | translated |
-| RishHost.java | rish_host_policy.d | byte packing/state translated; native fork/pty remains |
-| RishService.java | rish_service_policy.d | transaction/environment policy translated |
+| RishHost.java | rish_host_policy.d, rish_host.d | object state and JNI start marshaling translated; native fork/pty remains |
+| RishService.java | rish_service_policy.d, rish_service.d | transaction/environment policy plus PID-keyed host registry and create ordering translated; Binder Parcel adapter remains |
 | RishTerminal.java | rish_terminal_policy.d | tty/fd policy translated; native terminal loop remains |
 | rish C++ PTY/JNI files | rish_*_policy.d | semantics mapped; POSIX/Bionic implementation remains |
 

@@ -33,7 +33,7 @@ copying Binder/Parcel ABI declarations.
 - SystemServiceHelper transaction-field/cache-key and versioned-field fallback logic;
 - system-property Java decode/boolean semantics;
 - service-connection cache/death state, BinderContainer semantics, and user-service launch parsing;
-- remote-process lifetime/time-unit policy, Rish host start marshaling/state, PID-keyed service host registry, and terminal native planning;
+- remote-process lifetime/time-unit policy, Rish host start marshaling/state, PID-keyed service host registry, terminal native planning, and createHost Binder framing with an explicit raw-FD bridge;
 - shared AIDL/libbinder_ndk transaction/status machinery;
 - direct API-29+ libbinder_ndk clients for primitive Shizuku service calls and
   all IRemoteProcess methods;

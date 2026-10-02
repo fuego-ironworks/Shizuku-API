@@ -10,7 +10,7 @@ one convenient API surface.
 | api | substantial | Core state, UserService arguments/launch parsing, client records, service-connection/cache state, system-property parsing, remote-process state, binder-wrapper forwarding, UID helpers and Sui protocol are translated. Android Parcel/Handler/stream adapters remain. |
 | provider | protocol/state translated | Constants, BinderContainer holder semantics, manifest invariants and binder-sharing decisions are translated. ContentProvider, Bundle, BroadcastReceiver and Intent adapters remain. |
 | server-shared | substantial translation | ConfigManager/entry, ClientRecord/ClientManager, UserService lifecycle, UserServiceManager record tables/replacement/peek/remove/package history, Service permission/request/flag policy and UID helpers are translated. Binder/PackageManager/process/file-descriptor plumbing and Android runtime bootstrapping remain. |
-| rish | substantial translation | Constants/config, C-string blocks, environment rules, tty/pipe planning, transaction routing, RishHost object/start marshaling, PID-keyed RishService host state, terminal/native fd behavior and exit semantics are translated. POSIX/Bionic execution, pthread transfer loops and Binder Parcel adapters remain. |
+| rish | substantial translation | Constants/config, C-string blocks, environment rules, tty/pipe planning, transaction routing, RishHost object/start marshaling, PID-keyed RishService host state, terminal/native fd behavior, exit semantics, and createHost libbinder_ndk framing are translated. Java raw-FD Parcel bridging, reply-path verification, POSIX/Bionic execution and pthread transfer loops remain. |
 | demo | deferred test consumer | Translate after the API path can execute on device. |
 | demo-hidden-api-stub | mapped | Preserve hidden API declarations as an explicit Android boundary. |
 
@@ -52,5 +52,5 @@ File-by-file status is tracked in COVERAGE.md.
 - add/remove/attach user-service Bundle codecs;
 - newProcess string-array and returned Binder codec;
 - provider ContentProvider/Bundle/Intent/Handler adapters;
-- rish POSIX/Bionic fork/pty/transfer implementation;
+- rish raw-FD Parcel bridge plus POSIX/Bionic fork/pty/transfer implementation;
 - server-side Binder stub and Android PackageManager/property/process adapters;

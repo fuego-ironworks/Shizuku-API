@@ -590,7 +590,31 @@ unittest {
     assert(!invalid.valid());
 }
 
-import shizuku.aidl_ndk : Utf8View;
+unittest {
+    Utf8View[2] values;
+    values[0].buffer = "sh".ptr;
+    values[0].length = 2;
+    values[1].is_null = true;
+    values[1].length = -1;
+
+    Utf8ArrayView array;
+    array.values = values.ptr;
+    array.length = 2;
+    assert(array.valid());
+
+    int length;
+    assert(utf8_array_element_getter(&array, 0, &length) == "sh".ptr);
+    assert(length == 2);
+    assert(utf8_array_element_getter(&array, 1, &length) is null);
+    assert(length == -1);
+
+    Utf8ArrayView null_array;
+    null_array.is_null = true;
+    null_array.length = -1;
+    assert(null_array.valid());
+}
+
+import shizuku.aidl_ndk : Utf8ArrayView, Utf8View, utf8_array_element_getter;
 
 
 import shizuku.user_service_registry;

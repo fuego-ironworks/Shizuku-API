@@ -9,6 +9,10 @@ import shizuku.application_ndk_binder :
 import shizuku.remote_process_ndk_client :
     REMOTE_PROCESS_DESCRIPTOR,
     define_remote_process_class;
+import shizuku.rish_ndk_client :
+    RishCreateHostPayload,
+    RishRawFdWriter,
+    define_rish_interface_class;
 import shizuku.service_connection_ndk_binder :
     SERVICE_CONNECTION_DESCRIPTOR,
     define_service_connection_class;
@@ -26,6 +30,8 @@ static assert(SERVICE_CONNECTION_DESCRIPTOR ==
 static assert(RemoteProcessTransaction.wait_for_timeout == 8);
 static assert(ServiceConnectionTransaction.connected == 1);
 static assert(ServiceConnectionTransaction.died == 2);
+static assert(is(RishRawFdWriter));
+static assert(RishCreateHostPayload.sizeof > 0);
 
 /**
  * Compile-only signature probe. It deliberately does not call libbinder_ndk;

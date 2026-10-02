@@ -13,8 +13,12 @@ import ick.android.bionic :
     cfmakeraw,
     close,
     grantpt,
+    free,
     ioctl,
+    malloc,
     open,
+    pthread_create,
+    pthread_t,
     read,
     ssize_t,
     tcgetattr,
@@ -123,6 +127,66 @@ void transfer(
         close(output_fd);
     if (finished !is null)
         finished(context);
+}
+
+private struct TransferThreadData {
+    int input_fd;
+    int output_fd;
+    bool close_input;
+    bool close_output;
+    TransferFinished finished;
+    void* context;
+}
+
+extern(C) private void* transfer_thread_main(void* raw) nothrow @nogc
+{
+    auto data = cast(TransferThreadData*) raw;
+    if (data is null)
+        return null;
+
+    transfer(
+        data.input_fd,
+        data.output_fd,
+        data.close_input,
+        data.close_output,
+        data.finished,
+        data.context
+    );
+    free(data);
+    return null;
+}
+
+/**
+ * pts.cpp::transfer_async using Bionic pthread_create.
+ *
+ * Upstream leaves these threads joinable and does not retain pthread_t; this
+ * translation intentionally does the same rather than changing lifecycle.
+ */
+bool transfer_async(
+    int input_fd,
+    int output_fd,
+    TransferFinished finished = null,
+    void* context = null,
+    bool close_input = true,
+    bool close_output = true) nothrow @nogc
+{
+    auto data = cast(TransferThreadData*) malloc(TransferThreadData.sizeof);
+    if (data is null)
+        return false;
+
+    data.input_fd = input_fd;
+    data.output_fd = output_fd;
+    data.close_input = close_input;
+    data.close_output = close_output;
+    data.finished = finished;
+    data.context = context;
+
+    pthread_t thread;
+    if (pthread_create(&thread, null, &transfer_thread_main, data) != 0) {
+        free(data);
+        return false;
+    }
+    return true;
 }
 
 /** Native pts.cpp::open_ptmx. */

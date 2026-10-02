@@ -39,8 +39,8 @@ stands between it and execution.
 | Rish.java | rish_entry.d | control flow translated |
 | RishConfig.java / RishConstants.java | rish_config.d | translated |
 | RishHost.java | rish_host_policy.d, rish_host.d | object state and JNI start marshaling translated; native fork/pty remains |
-| RishService.java | rish_service_policy.d, rish_service.d | transaction/environment policy plus PID-keyed host registry and create ordering translated; Binder Parcel adapter remains |
-| RishTerminal.java | rish_terminal_policy.d | tty/fd policy translated; native terminal loop remains |
+| RishService.java | rish_service_policy.d, rish_service.d | transaction/environment policy plus PID-keyed host registry and create ordering translated; raw-FD Binder server adapter remains |
+| RishTerminal.java | rish_terminal_policy.d, rish_ndk_client.d | tty/fd policy and createHost Binder framing translated; raw-FD bridge, reply-path verification, and native terminal loop remain |
 | rish C++ PTY/JNI files | rish_*_policy.d | semantics mapped; POSIX/Bionic implementation remains |
 
 The remaining concentration of work is no longer ordinary Java business logic.

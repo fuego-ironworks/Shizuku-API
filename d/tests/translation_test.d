@@ -229,7 +229,9 @@ unittest {
 
 import shizuku.binder_container;
 import shizuku.remote_process;
+import shizuku.rish_host;
 import shizuku.rish_host_policy;
+import shizuku.rish_service;
 import shizuku.rish_service_policy;
 import shizuku.rish_terminal_policy;
 import shizuku.service_connections;
@@ -377,6 +379,79 @@ unittest {
     assert(!create_host_should_decode(false, false));
     assert(!create_host_should_decode(true, true));
     assert(create_host_should_decode(true, false));
+}
+
+unittest {
+    auto service = new RishServiceState;
+
+    auto adb_host = service.prepare_create_host(
+        false,
+        ["-c", "id"],
+        ["PATH=/data/data/com.termux/files/usr/bin"],
+        "/data/local/tmp",
+        cast(ubyte)(ATTY_IN | ATTY_OUT),
+        10,
+        11,
+        12
+    );
+
+    // adb drops the supplied environment unless explicitly preserved.
+    assert(adb_host.environment is null);
+
+    RishHostStartInput start;
+    assert(adb_host.prepare_start(start));
+    assert(start.argc == 2);
+    assert(start.envc == -1);
+    assert(start.tty == cast(ubyte)(ATTY_IN | ATTY_OUT));
+    assert(start.stdin_fd == 10);
+    assert(start.stdout_fd == 11);
+    assert(start.stderr_fd == 12);
+    assert(start.arg_block[$ - 1] == 0);
+    assert(start.dir_block[$ - 1] == 0);
+
+    adb_host.started(1234, 44);
+    assert(service.commit_started_host(77, adb_host));
+    assert(service.host_count == 1);
+    assert(service.host_for(77) is adb_host);
+    assert(service.window_size_host(77).window_size_fd == 44);
+    assert(service.exit_code_for(77) == int.max);
+
+    adb_host.completed(23);
+    assert(service.exit_code_for(77) == 23);
+    assert(service.exit_code_for(88) == -1);
+
+    auto root_host = service.prepare_create_host(
+        true,
+        ["-c", "pwd"],
+        ["PATH=/system/bin"],
+        null,
+        0,
+        20,
+        21,
+        22
+    );
+    assert(root_host.environment.length == 1);
+    assert(root_host.environment[0] == "PATH=/system/bin");
+
+    RishHostStartInput root_start;
+    assert(root_host.prepare_start(root_start));
+    assert(root_start.envc == 1);
+    assert(root_start.dir_block is null);
+
+    root_host.started(5678, -1);
+    assert(service.commit_started_host(77, root_host));
+    assert(service.host_count == 1);
+    assert(service.host_for(77) is root_host);
+
+    // HashMap.put replacement does not destroy the old host.
+    assert(adb_host.pid == 1234);
+    assert(adb_host.exit_code == 23);
+
+    auto invalid = service.prepare_create_host(
+        true, null, null, null, 0, -1, -1, -1
+    );
+    RishHostStartInput invalid_start;
+    assert(!invalid.prepare_start(invalid_start));
 }
 
 unittest {

@@ -75,7 +75,7 @@ extern(C) const(char)* utf8_array_element_getter(
     if (view.is_null || index >= cast(size_t) view.length)
         return null;
 
-    const element = view.values[index];
+    const(Utf8View) element = view.values[index];
     *out_length = element.is_null ? -1 : element.length;
     return element.is_null ? null : element.buffer;
 }

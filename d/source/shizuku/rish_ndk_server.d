@@ -29,7 +29,7 @@ alias RishPermissionHandler =
 alias RishCreateHostHandler =
     extern(C) binder_status_t function(
         void* context,
-        const(RishCreateHostView)* request
+        RishCreateHostView* request
     ) nothrow @nogc;
 
 alias RishSetWindowSizeHandler =
@@ -326,20 +326,15 @@ private binder_status_t handle_create_host(
     }
 
     /*
-     * On handler success, ownership of the three decoded descriptors transfers
-     * to the host layer, matching ParcelFileDescriptor.detachFd in Java.
-     * On handler failure this adapter closes them.
+     * Descriptor ownership starts in this adapter. A handler that consumes a
+     * descriptor sets its field to -1 before returning; every descriptor still
+     * present is closed here. This also handles the rare case where native
+     * process start succeeded but a later host-registration step failed.
      *
      * Strings are borrowed only for the callback and are always released here.
      */
     status = server.create_host(server.context, &request);
-    if (status != STATUS_OK)
-        close_request_fds(request);
-    else {
-        request.stdin_fd = -1;
-        request.stdout_fd = -1;
-        request.stderr_fd = -1;
-    }
+    close_request_fds(request);
     release_request_strings(request);
 
     if (status != STATUS_OK)

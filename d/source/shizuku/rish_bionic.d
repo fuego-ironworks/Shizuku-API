@@ -15,7 +15,6 @@ import ick.android.bionic :
     grantpt,
     ioctl,
     open,
-    ptrdiff_t,
     read,
     ssize_t,
     tcgetattr,
@@ -73,7 +72,7 @@ private int write_full(
     size_t count = initial_count;
 
     while (count > 0) {
-        const size_t maximum = cast(size_t) ptrdiff_t.max;
+        const size_t maximum = cast(size_t) ssize_t.max;
         const size_t chunk = count < maximum ? count : maximum;
         const ssize_t amount = write(fd, buffer, chunk);
 
